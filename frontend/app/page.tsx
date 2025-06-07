@@ -1,26 +1,47 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const [categories, setCategories] = useState<string[]>([]);
+  const [areas, setAreas] = useState<string[]>([]);
   const [area, setArea] = useState("");
   const [category, setCategory] = useState("");
   const [priceRange, setPriceRange] = useState({ min: "", max: "" });
   const [size, setSize] = useState({ min: "", max: "" });
   const [selectedOption, setSelectedOption] = useState<"sale" | "rent">("sale");
+  const router = useRouter();
 
-  // Helper function to generate price options
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const res = await fetch(
+        "http://localhost:8080/api/properties/categories"
+      );
+      const data = await res.json();
+      setCategories(data);
+    };
+
+    const fetchAreas = async () => {
+      const res = await fetch("http://localhost:8080/api/properties/areas");
+      const data = await res.json();
+      setAreas(data);
+    };
+
+    fetchCategories();
+    fetchAreas();
+  }, []);
+
   const generatePriceOptions = () => {
     const options = [];
-    for (let i = 10000; i <= 200000; i += 10000) {
-      options.push(i);
-    }
-    for (let i = 225000; i <= 400000; i += 25000) {
-      options.push(i);
+    if (selectedOption === "sale") {
+      for (let i = 10000; i <= 200000; i += 10000) options.push(i);
+      for (let i = 225000; i <= 400000; i += 25000) options.push(i);
+    } else {
+      for (let i = 100; i <= 7000; i += 200) options.push(i);
     }
     return options;
   };
-
   // Helper function to generate size options
   const generateSizeOptions = () => {
     const options = [];
@@ -80,9 +101,11 @@ export default function Home() {
                       className="w-full p-2 border border-gray-300 rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white/60"
                     >
                       <option value="">Select Category</option>
-                      <option value="house">House</option>
-                      <option value="field">Field</option>
-                      <option value="land">Land</option>
+                      {categories.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
                     </select>
                   </div>
 
@@ -96,9 +119,12 @@ export default function Home() {
                       onChange={(e) => setArea(e.target.value)}
                       className="w-full p-2 border border-gray-300 rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white/60 "
                     >
-                      <option value="">Attica</option>
-                      <option value="house">Crete</option>
-                      <option value="field">Mykonos</option>
+                      <option value="">Select Area</option>
+                      {areas.map((area) => (
+                        <option key={area} value={area}>
+                          {area}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
@@ -214,7 +240,23 @@ export default function Home() {
                 </div>
               </div>
             </div>
-            <button className="px-6 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-700">
+            <button
+              type="button"
+              onClick={() => {
+                const params = new URLSearchParams();
+
+                if (category) params.append("category", category);
+                if (area) params.append("area", area);
+                if (selectedOption) params.append("type", selectedOption);
+                if (priceRange.min) params.append("minPrice", priceRange.min);
+                if (priceRange.max) params.append("maxPrice", priceRange.max);
+                if (size.min) params.append("minSize", size.min);
+                if (size.max) params.append("maxSize", size.max);
+
+                router.push(`/properties?${params.toString()}`);
+              }}
+              className="px-6 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-700"
+            >
               Search
             </button>
           </div>

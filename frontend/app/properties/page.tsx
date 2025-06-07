@@ -3,35 +3,37 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link"; // <-- Προσθήκη αυτής της γραμμής
+import { useSearchParams } from "next/navigation";
 
 export default function PropertiesPage() {
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null); // Προσθήκη state για λάθη
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     const fetchProperties = async () => {
+      setLoading(true);
       try {
-        // Καλέστε το API endpoint του Java backend σας
-        const response = await fetch("http://localhost:8080/api/properties"); // Αλλάξτε το port αν το Spring Boot τρέχει σε άλλο (το default είναι 8080)
+        const query = searchParams.toString();
+        const endpoint = query
+          ? `http://localhost:8080/api/properties/search?${query}`
+          : `http://localhost:8080/api/properties`;
 
-        if (!response.ok) {
-          // Αν η απάντηση δεν είναι 2xx (π.χ., 404, 500)
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        const res = await fetch(endpoint);
+        if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
 
-        const data = await response.json(); // Μετατρέψτε την απάντηση σε JSON
+        const data = await res.json();
         setProperties(data);
       } catch (err) {
-        console.error("Error fetching properties from Java backend:", err);
-        setError(err.message); // Αποθήκευση του μηνύματος λάθους
+        setError(err.message);
       } finally {
         setLoading(false);
       }
     };
 
     fetchProperties();
-  }, []);
+  }, [searchParams]);
 
   if (loading) return <p>Loading properties...</p>;
   if (error) return <p>Error loading properties: {error}</p>; // Εμφάνιση λάθους
@@ -59,14 +61,29 @@ export default function PropertiesPage() {
               </Link>
               <div className="p-2.5">
                 <h2 className="text-xl font-semibold mb-2">{property.title}</h2>
-                <p className="text-blue-500 font-bold mb-2">
-                  €{property.price_sale ? property.price_sale.toLocaleString() : 'N/A'}
-                </p>
+                <div className="text-blue-500 font-bold mb-2">
+                  <p>
+                    <strong>Αγορά:</strong>{" "}
+                    {property.priceSale
+                      ? property.priceSale.toLocaleString() + " €"
+                      : "N/A"}
+                  </p>
+                  <p>
+                    <strong>Ενοικίαση:</strong>{" "}
+                    {property.priceRent
+                      ? property.priceRent.toLocaleString() + " €"
+                      : "N/A"}
+                  </p>
+                </div>
                 <div className="flex justify-between text-sm text-gray-600">
-                  <span>{property.area || 'N/A'}</span>
-                  <span>{property.size ? `${property.size} m²` : 'N/A'}</span>
-                  <span>{property.bedrooms ? `${property.bedrooms} beds` : 'N/A'}</span>
-                  <span>{property.bathrooms ? `${property.bathrooms} baths` : 'N/A'}</span>
+                  <span>{property.area || "N/A"}</span>
+                  <span>{property.size ? `${property.size} m²` : "N/A"}</span>
+                  <span>
+                    {property.bedrooms ? `${property.bedrooms} beds` : "N/A"}
+                  </span>
+                  <span>
+                    {property.bathrooms ? `${property.bathrooms} baths` : "N/A"}
+                  </span>
                 </div>
                 {/* Εδώ προσθέτουμε το Link component γύρω από το κουμπί */}
                 <Link href={`/properties/${property.id}`} legacyBehavior>
