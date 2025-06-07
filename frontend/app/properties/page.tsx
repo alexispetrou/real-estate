@@ -1,12 +1,8 @@
-// src/app/PropertiesPage.jsx (ή όπου βρίσκεται ο κώδικάς σας)
+// src/app/PropertiesPage.jsx
 "use client";
 
 import { useState, useEffect } from "react";
-// Δεν χρειάζονται πλέον οι εισαγωγές Firebase εδώ,
-// καθώς η Java θα αναλάβει την επικοινωνία με το Firebase.
-// import { initializeApp } from "firebase/app";
-// import { getFirestore, collection, getDocs } from "firebase/firestore";
-// import { getAnalytics } from "firebase/analytics";
+import Link from "next/link"; // <-- Προσθήκη αυτής της γραμμής
 
 export default function PropertiesPage() {
   const [properties, setProperties] = useState([]);
@@ -18,12 +14,12 @@ export default function PropertiesPage() {
       try {
         // Καλέστε το API endpoint του Java backend σας
         const response = await fetch("http://localhost:8080/api/properties"); // Αλλάξτε το port αν το Spring Boot τρέχει σε άλλο (το default είναι 8080)
-        
+
         if (!response.ok) {
           // Αν η απάντηση δεν είναι 2xx (π.χ., 404, 500)
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const data = await response.json(); // Μετατρέψτε την απάντηση σε JSON
         setProperties(data);
       } catch (err) {
@@ -53,11 +49,14 @@ export default function PropertiesPage() {
               key={property.id}
               className="border rounded-lg overflow-hidden shadow-lg"
             >
-              <img
-                src={property.images}
-                alt={property.title}
-                className="w-full h-55 object-cover"
-              />
+              {/* Εδώ προσθέτουμε το Link component γύρω από την εικόνα */}
+              <Link href={`/properties/${property.id}`}>
+                <img
+                  src={property.images}
+                  alt={property.title}
+                  className="w-full h-55 object-cover"
+                />
+              </Link>
               <div className="p-2.5">
                 <h2 className="text-xl font-semibold mb-2">{property.title}</h2>
                 <p className="text-blue-500 font-bold mb-2">
@@ -69,9 +68,12 @@ export default function PropertiesPage() {
                   <span>{property.bedrooms ? `${property.bedrooms} beds` : 'N/A'}</span>
                   <span>{property.bathrooms ? `${property.bathrooms} baths` : 'N/A'}</span>
                 </div>
-                <button className="mt-4 w-full py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
-                  View Details
-                </button>
+                {/* Εδώ προσθέτουμε το Link component γύρω από το κουμπί */}
+                <Link href={`/properties/${property.id}`} legacyBehavior>
+                  <a className="mt-4 w-full block text-center py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
+                    View Details
+                  </a>
+                </Link>
               </div>
             </div>
           ))
