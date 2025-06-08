@@ -5,7 +5,7 @@ public class user {
     private String role;
     private String firstName; 
     private String lastName; 
-    private  String id;
+    private final  String id;
 
     public user(String username, String role, String firstName, String lastName, String id) {
         this.username = username;
