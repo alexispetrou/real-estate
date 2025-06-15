@@ -64,6 +64,11 @@ export default function Navigation() {
             (user ? (
               <div className="flex items-center space-x-4">
                 <NavLink
+                  href="/myProperties"
+                  label="My Properties"
+                  current={pathname === "/myProperties"}
+                />
+                <NavLink
                   href="/dash"
                   label={<FaUser />}
                   current={pathname === "/dashboard"}
