@@ -36,7 +36,7 @@ export default function Home() {
     const options = [];
     if (selectedOption === "sale") {
       for (let i = 10000; i <= 200000; i += 10000) options.push(i);
-      for (let i = 225000; i <= 400000; i += 25000) options.push(i);
+      for (let i = 225000; i <= 3000000; i += 25000) options.push(i);
     } else {
       for (let i = 100; i <= 7000; i += 200) options.push(i);
     }
