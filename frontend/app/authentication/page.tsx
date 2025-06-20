@@ -8,7 +8,8 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
 } from "firebase/auth";
-import { auth } from "../firebase/config";
+import { doc, setDoc } from "firebase/firestore";
+import { auth, db } from "../firebase/config"; // Βεβαιώσου ότι έχεις db (Firestore)
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -16,12 +17,13 @@ const AuthPage = () => {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [role, setRole] = useState(""); // <- ΝΕΟ
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
@@ -32,8 +34,13 @@ const AuthPage = () => {
       return;
     }
 
+    if (!isLogin && role === "") {
+      setError("Please select a role.");
+      setIsLoading(false);
+      return;
+    }
+
     if (isLogin) {
-      // Login with Firebase
       signInWithEmailAndPassword(auth, email, password)
         .then(() => {
           router.push("/dash");
@@ -45,9 +52,17 @@ const AuthPage = () => {
           setIsLoading(false);
         });
     } else {
-      // Register with Firebase
       createUserWithEmailAndPassword(auth, email, password)
-        .then(() => {
+        .then(async (userCredential) => {
+          const user = userCredential.user;
+
+          await setDoc(doc(db, "users", user.uid), {
+            name,
+            email,
+            role,
+            createdAt: new Date(),
+          });
+
           router.push("/dash");
         })
         .catch((error) => {
@@ -77,7 +92,6 @@ const AuthPage = () => {
                 Our platform provides access to exclusive listings and
                 personalized service.
               </p>
-
               <p>Browse to over 10,000 listings available</p>
             </div>
             <div className="mt-auto">
@@ -125,25 +139,43 @@ const AuthPage = () => {
 
           <form onSubmit={handleSubmit}>
             {!isLogin && (
-              <div className="mb-4">
-                <label
-                  htmlFor="name"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="John Doe"
-                  required={!isLogin}
-                />
-              </div>
+              <>
+                <div className="mb-4">
+                  <label
+                    htmlFor="name"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="John Doe"
+                    required
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Select Role
+                  </label>
+                  <select
+                    value={role}
+                    onChange={(e) => setRole(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  >
+                    <option value="">Choose...</option>
+                    <option value="client">Client</option>
+                    <option value="seller">Seller</option>
+                  </select>
+                </div>
+              </>
             )}
-            {/* Email field */}
+
             <div className="mb-4">
               <label
                 htmlFor="email"
@@ -161,6 +193,7 @@ const AuthPage = () => {
                 required
               />
             </div>
+
             <div className="mb-4">
               <label
                 htmlFor="password"
@@ -179,6 +212,7 @@ const AuthPage = () => {
                 required
               />
             </div>
+
             {!isLogin && (
               <div className="mb-4">
                 <label
@@ -194,10 +228,11 @@ const AuthPage = () => {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="••••••••"
-                  required={!isLogin}
+                  required
                 />
               </div>
             )}
+
             {isLogin && (
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center">
@@ -223,11 +258,13 @@ const AuthPage = () => {
                 </div>
               </div>
             )}
+
             {error && (
               <div className="mt-4 p-2 bg-red-50 text-red-600 rounded-md text-sm">
                 {error}
               </div>
             )}
+
             {!isLogin && (
               <div className="mb-6">
                 <div className="flex items-center">
@@ -235,30 +272,25 @@ const AuthPage = () => {
                     type="checkbox"
                     id="terms"
                     className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    required={!isLogin}
+                    required
                   />
                   <label
                     htmlFor="terms"
                     className="ml-2 block text-sm text-gray-700"
                   >
                     I agree to the{" "}
-                    <Link
-                      href="#"
-                      className="text-blue-600 hover:text-blue-800"
-                    >
+                    <Link href="#" className="text-blue-600 hover:text-blue-800">
                       Terms of Service
                     </Link>{" "}
                     and{" "}
-                    <Link
-                      href="#"
-                      className="text-blue-600 hover:text-blue-800"
-                    >
+                    <Link href="#" className="text-blue-600 hover:text-blue-800">
                       Privacy Policy
                     </Link>
                   </label>
                 </div>
               </div>
             )}
+
             <button
               type="submit"
               disabled={isLoading}
@@ -270,11 +302,6 @@ const AuthPage = () => {
                 ? "Sign In"
                 : "Create Account"}
             </button>
-            <div className="mt-6">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center"></div>
-              </div>
-            </div>
           </form>
         </div>
       </div>
