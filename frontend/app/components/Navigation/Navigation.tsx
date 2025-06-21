@@ -1,38 +1,26 @@
 "use client";
 import { FaUser, FaSignOutAlt } from "react-icons/fa";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { JSX, useEffect, useState } from "react";
-import { User as CustomUser } from "../../types/types";
-import {
-  onAuthStateChanged,
-  signOut,
-  User as FirebaseUser,
-} from "firebase/auth";
-import { auth } from "../../firebase/config"; // Add this import
+import { usePathname, useRouter } from "next/navigation";
+import { JSX } from "react";
+import { signOut } from "firebase/auth";
+import { auth } from "../../firebase/config";
+import { useAuth, isSeller, isAdmin } from "../../hooks/useAuth";
 
 export default function Navigation() {
   const pathname = usePathname();
-  const [user, setUser] = useState<FirebaseUser | null>(null); // Use Firebase's User type
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser); // This is a Firebase User, not your custom User
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
+  const router = useRouter();
+  const { user, userRole, loading } = useAuth();
 
   const handleSignOut = async () => {
     try {
       await signOut(auth);
+      router.push("/");
+      router.refresh(); // Force re-render of the navigation
     } catch (error) {
       console.error("Error signing out:", error);
     }
   };
-
   return (
     <nav className="bg-white shadow-md py-4">
       <div className="container mx-auto px-6 flex items-center justify-between">
@@ -63,16 +51,34 @@ export default function Navigation() {
           {!loading &&
             (user ? (
               <div className="flex items-center space-x-4">
-                <NavLink
-                  href="/myProperties"
-                  label="My Properties"
-                  current={pathname === "/myProperties"}
-                />
+                {isSeller(userRole) && (
+                  <NavLink
+                    href="/myProperties"
+                    label="My Properties"
+                    current={pathname === "/myProperties"}
+                  />
+                )}
+
+                {/* Show "Sellers" for admin */}
+                {isAdmin(userRole) && (
+                  <NavLink
+                    href="/sellers"
+                    label="Sellers"
+                    current={pathname === "/sellers"}
+                  />
+                )}
                 <NavLink
                   href="/dash"
                   label={<FaUser />}
-                  current={pathname === "/dashboard"}
+                  current={pathname === "/dash"}
                 />
+                <button
+                  onClick={handleSignOut}
+                  className="text-lg font-medium text-gray-600 hover:text-blue-500 transition-colors duration-200 flex items-center space-x-1"
+                >
+                  <FaSignOutAlt />
+                  <span>Sign Out</span>
+                </button>
               </div>
             ) : (
               <NavLink

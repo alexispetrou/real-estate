@@ -1,13 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import {
-  FaPlus,
-  FaHome,
-  FaBed,
-  FaBath,
-  FaDollarSign,
-  FaTrash,
-} from "react-icons/fa";
+import Image from "next/image";
+import { FaPlus, FaBed, FaBath, FaTrash } from "react-icons/fa";
 import { onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
 import { auth, db, storage } from "../firebase/config";
 import {
@@ -21,11 +15,30 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { Timestamp } from "firebase/firestore";
+
+interface Property {
+  id: string;
+  title: string;
+  description: string;
+  price_sale: number;
+  bedrooms: number;
+  bathrooms: number;
+  squareFeet: number;
+  address: string;
+  city: string;
+  state: string;
+  zipCode?: string;
+  propertyType: string;
+  images: string[];
+  userId: string;
+  createdAt: Timestamp | null;
+}
 
 export default function MyProperties() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [user, setUser] = useState<FirebaseUser | null>(null);
-  const [properties, setProperties] = useState<any[]>([]);
+  const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     title: "",
@@ -76,10 +89,13 @@ export default function MyProperties() {
       const q = query(propertiesRef, where("userId", "==", userId));
       const querySnapshot = await getDocs(q);
 
-      const userProperties = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      const userProperties = querySnapshot.docs.map(
+        (doc) =>
+          ({
+            id: doc.id,
+            ...doc.data(),
+          } as Property)
+      );
 
       setProperties(userProperties);
     } catch (error) {
@@ -426,9 +442,11 @@ export default function MyProperties() {
                 className="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
               >
                 {property.images && property.images.length > 0 && (
-                  <img
+                  <Image
                     src={property.images[0]}
                     alt={property.title}
+                    width={400}
+                    height={192}
                     className="w-full h-48 object-cover"
                   />
                 )}
@@ -443,7 +461,9 @@ export default function MyProperties() {
                       <FaTrash />
                     </button>
                   </div>
-                  <p className="text-gray-600 text-sm mb-2">{property.area}</p>
+                  <p className="text-gray-600 text-sm mb-2">
+                    {property.city}, {property.state}
+                  </p>
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-2xl font-bold text-blue-600">
                       {property.price_sale.toLocaleString()}
