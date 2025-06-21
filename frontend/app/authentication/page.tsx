@@ -169,7 +169,7 @@ const AuthPage = () => {
                     required
                   >
                     <option value="">Choose...</option>
-                    <option value="client">Client</option>
+                    <option value="admin">Admin</option>
                     <option value="seller">Seller</option>
                   </select>
                 </div>
@@ -279,11 +279,17 @@ const AuthPage = () => {
                     className="ml-2 block text-sm text-gray-700"
                   >
                     I agree to the{" "}
-                    <Link href="#" className="text-blue-600 hover:text-blue-800">
+                    <Link
+                      href="#"
+                      className="text-blue-600 hover:text-blue-800"
+                    >
                       Terms of Service
                     </Link>{" "}
                     and{" "}
-                    <Link href="#" className="text-blue-600 hover:text-blue-800">
+                    <Link
+                      href="#"
+                      className="text-blue-600 hover:text-blue-800"
+                    >
                       Privacy Policy
                     </Link>
                   </label>
