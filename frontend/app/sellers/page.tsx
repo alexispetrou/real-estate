@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { FaUser, FaEnvelope, FaCalendar } from "react-icons/fa";
-import { onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../firebase/config";
 import {
   collection,
@@ -22,47 +22,38 @@ interface Seller {
 }
 
 export default function Sellers() {
-  const [userRole, setUserRole] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [sellers, setSellers] = useState<Seller[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (currentUser) {
-        try {
-          console.log("Current user UID:", currentUser.uid);
-          console.log("Current user email:", currentUser.email);
+  const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+    if (currentUser) {
+      try {
+        const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          const adminRole = userData.role === "admin";
+          setIsAdmin(adminRole);
 
-          // Check if user is admin
-          const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            console.log("User data from Firestore:", userData);
-            setUserRole(userData.role);
-            console.log(userRole);
-            // Only fetch sellers if user is admin
-            if (userData.role === "admin") {
-              console.log("User is admin, fetching sellers...");
-              await fetchSellers();
-            } else {
-              console.log("User role is:", userData.role, "- not admin");
-            }
+          if (adminRole) {
+            await fetchSellers();
           } else {
-            console.log(
-              "No user document found in Firestore for UID:",
-              currentUser.uid
-            );
+            console.warn("User is not admin. Access denied.");
           }
-        } catch (error) {
-          console.error("Error fetching user role:", error);
+        } else {
+          console.warn("User document not found in Firestore.");
         }
+      } catch (error) {
+        console.error("Error checking user role in Firestore:", error);
       }
+    }
 
-      setLoading(false);
-    });
+    setLoading(false);
+  });
 
-    return () => unsubscribe();
-  }, []);
+  return () => unsubscribe();
+}, []);
 
   const fetchSellers = async () => {
     try {
@@ -70,41 +61,28 @@ export default function Sellers() {
       setLoading(true);
 
       const usersRef = collection(db, "users");
-      console.log("Created users collection reference");
-
       const q = query(usersRef, where("role", "==", "seller"));
-      console.log("Created query for sellers");
-
       const querySnapshot = await getDocs(q);
-      console.log("Query executed, docs found:", querySnapshot.docs.length);
 
       const sellersData = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       })) as Seller[];
 
-      console.log("Sellers data:", sellersData);
       setSellers(sellersData);
     } catch (error) {
       console.error("Error fetching sellers:", error);
-      if (error instanceof Error) {
-        console.error("Error details:", error.message);
-      }
-      setSellers([]);
     } finally {
       setLoading(false);
     }
   };
 
-  if (!loading && userRole !== "admin") {
+  if (!loading && !isAdmin) {
     return (
       <div className="container mx-auto px-6 py-8">
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
           <h2 className="text-xl font-bold mb-2">Access Denied</h2>
-          <p>
-            You don&apos;t have permission to view this page. Admin access
-            required.
-          </p>
+          <p>You don&apos;t have permission to view this page. Admin access required.</p>
         </div>
       </div>
     );
