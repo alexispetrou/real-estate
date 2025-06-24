@@ -11,6 +11,7 @@ import {
   doc,
   getDoc,
   Timestamp,
+  deleteDoc,
 } from "firebase/firestore";
 
 interface Seller {
@@ -21,10 +22,25 @@ interface Seller {
   createdAt?: Timestamp;
 }
 
+
+
+
 export default function Sellers() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [sellers, setSellers] = useState<Seller[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const handleDeleteSeller = async (sellerId: string) => {
+    if (!confirm("Are you sure you want to delete this seller?")) return;
+
+    try {
+      await deleteDoc(doc(db, "users", sellerId));
+      setSellers((prev) => prev.filter((seller) => seller.id !== sellerId));
+      console.log("Seller deleted:", sellerId);
+    } catch (error) {
+      console.error("Error deleting seller:", error);
+    }
+  };
 
   useEffect(() => {
   const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -146,8 +162,11 @@ export default function Sellers() {
               </div>
 
               <div className="mt-4 pt-4 border-t border-gray-200">
-                <button className="text-blue-500 hover:text-blue-700 text-sm font-medium">
-                  View Properties
+                <button
+                  onClick={() => handleDeleteSeller(seller.id)}
+                  className="text-red-500 hover:text-red-700 text-sm font-medium"
+                >
+                  Delete Seller
                 </button>
               </div>
             </div>
