@@ -16,7 +16,7 @@ import {
 interface Seller {
   id: string;
   email: string;
-  displayName?: string;
+  name?: string;
   role: string;
   createdAt?: Timestamp;
 }
@@ -118,7 +118,7 @@ export default function Sellers() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg text-gray-800">
-                    {seller.displayName || "Unnamed Seller"}
+                    {seller.name || "Unnamed Seller"}
                   </h3>
                   <span className="text-sm text-blue-600 bg-blue-100 px-2 py-1 rounded capitalize">
                     {seller.role}
