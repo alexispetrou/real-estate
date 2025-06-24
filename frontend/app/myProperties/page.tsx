@@ -24,7 +24,7 @@ interface Property {
   price_sale: number;
   bedrooms: number;
   bathrooms: number;
-  squareFeet: number;
+  size: number;
   address: string;
   city: string;
   state: string;
@@ -220,7 +220,7 @@ export default function MyProperties() {
                 onClick={() => setShowCreateForm(false)}
                 className="text-gray-500 hover:text-gray-700 text-2xl"
               >
-                ×
+                
               </button>
             </div>
 
@@ -451,9 +451,7 @@ export default function MyProperties() {
                       <FaTrash />
                     </button>
                   </div>
-                  <p className="text-gray-600 text-sm mb-2">
-                    {property.city}, {property.state}
-                  </p>
+                  
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-2xl font-bold text-blue-600">
                       {property.price_sale.toLocaleString()}
@@ -469,7 +467,7 @@ export default function MyProperties() {
                     <span className="flex items-center">
                       <FaBath className="mr-1" /> {property.bathrooms} bath
                     </span>
-                    <span>{property.squareFeet} sqft</span>
+                    <span>{property.size} sqft</span>
                   </div>
                 </div>
               </div>
