@@ -21,7 +21,7 @@ public class FirebaseConfig {
     @PostConstruct
     public void initializeFirebase() {
         try {
-            // Χρήση ClassPathResource για σωστή ανάγνωση αρχείου από το resources
+            
             InputStream serviceAccount = new ClassPathResource("serviceAccountKey.json").getInputStream();
 
             FirebaseOptions options = new FirebaseOptions.Builder()

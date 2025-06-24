@@ -52,7 +52,7 @@ export default function MyProperties() {
     state: "",
     zipCode: "",
     propertyType: "house",
-    images: [] as File[],
+    imageUrls: [] as string[],
   });
 
   const handleInputChange = (
@@ -123,14 +123,7 @@ export default function MyProperties() {
     }
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setFormData((prev) => ({
-        ...prev,
-        images: Array.from(e.target.files!),
-      }));
-    }
-  };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -147,21 +140,9 @@ export default function MyProperties() {
     try {
       setLoading(true);
 
-      const imageUrls: string[] = [];
+      
 
-      if (formData.images.length > 0) {
-        console.log("Uploading images...");
-        for (const image of formData.images) {
-          const imageRef = ref(
-            storage,
-            `properties/${user.uid}/${Date.now()}_${image.name}`
-          );
-          const snapshot = await uploadBytes(imageRef, image);
-          const downloadURL = await getDownloadURL(snapshot.ref);
-          imageUrls.push(downloadURL);
-        }
-        console.log("Images uploaded:", imageUrls);
-      }
+      const imageUrls = formData.imageUrls;
 
       // Create property object for Firestore
       const propertyData = {
@@ -388,17 +369,26 @@ export default function MyProperties() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Property Images
+                  Image URLs (from Spitogatos)
                 </label>
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={handleImageChange}
+                <textarea
+                  name="imageUrls"
+                  value={formData.imageUrls.join('\n')}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      imageUrls: e.target.value
+                        .split('\n')
+                        .map((url) => url.trim())
+                        .filter((url) => url !== ""),
+                    }))
+                  }
+                  rows={4}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Paste image URLs here, one per line..."
                 />
                 <p className="text-sm text-gray-500 mt-1">
-                  Select multiple images for your property
+                  Επικόλλησε τα URLs από το Spitogatos (μία ανά γραμμή)
                 </p>
               </div>
 

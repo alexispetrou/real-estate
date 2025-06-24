@@ -17,9 +17,9 @@ import com.example.model.SearchParameters;
 import com.example.service.PropertyService;
 
 @RestController
-@RequestMapping("/api") // Base path for your API
-@CrossOrigin(origins = "http://localhost:3000") // Επιτρέψτε το React app σας να κάνει requests (αλλάξτε το port αν
-                                                // χρειάζεται)
+@RequestMapping("/api") 
+@CrossOrigin(origins = "http://localhost:3000") 
+                                               
 public class PropertyController {
 
     private final PropertyService propertyService;
@@ -29,7 +29,7 @@ public class PropertyController {
         this.propertyService = propertyService;
     }
 
-    @GetMapping("/properties") // Endpoint: /api/properties
+    @GetMapping("/properties") 
     public ResponseEntity<List<Property>> getAllProperties() {
         try {
             List<Property> properties = propertyService.getAllProperties();
